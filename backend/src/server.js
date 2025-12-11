@@ -62,11 +62,14 @@ const startServer = async () => {
     // Connect to PostgreSQL
     await connectDB();
 
-    // Connect to Redis (optional, won't crash if fails)
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-    await cacheService.connect(redisUrl).catch(err => {
-        console.warn('⚠️  Redis not available, continuing without cache:', err.message);
-    });
+    // Connect to Redis (optional, only if REDIS_URL is set)
+    if (process.env.REDIS_URL) {
+        await cacheService.connect(process.env.REDIS_URL).catch(err => {
+            console.warn('⚠️  Redis connection failed, continuing without cache:', err.message);
+        });
+    } else {
+        console.log('ℹ️  Redis not configured, running without cache');
+    }
 
     app.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);
