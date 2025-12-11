@@ -3,10 +3,16 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const seedData = async () => {
+export const seedData = async () => {
     try {
-        await sequelize.authenticate();
-        console.log('✅ Database connected');
+        // Check if data already exists
+        const universityCount = await University.count();
+        if (universityCount > 0) {
+            console.log('ℹ️  Database already seeded, skipping...');
+            return;
+        }
+
+        console.log('🌱 Seeding database...');
 
         // Create universities
         const universities = await University.bulkCreate([
@@ -59,14 +65,19 @@ const seedData = async () => {
         console.log('\n📊 Seed Summary:');
         console.log(`   - ${universities.length} universities`);
         console.log(`   - ${programs.length} programs`);
-
-        await sequelize.close();
-        console.log('\n✅ Seeding complete!');
-        process.exit(0);
+        console.log('✅ Seeding complete!');
     } catch (error) {
         console.error('❌ Error seeding data:', error);
-        process.exit(1);
+        throw error;
     }
 };
 
-seedData();
+// Run directly if this file is executed
+if (import.meta.url === `file://${process.argv[1]}`) {
+    seedData()
+        .then(() => {
+            sequelize.close();
+            process.exit(0);
+        })
+        .catch(() => process.exit(1));
+}

@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './config/database.js';
 import cacheService from './services/cacheService.js';
+import { seedData } from '../seed.js';
 import authRoutes from './routes/authRoutes.js';
 import applicationRoutes from './routes/applicationRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
@@ -61,6 +62,11 @@ app.use((err, req, res, next) => {
 const startServer = async () => {
     // Connect to PostgreSQL
     await connectDB();
+
+    // Auto-seed database if empty (production-friendly)
+    await seedData().catch(err => {
+        console.warn('⚠️  Seeding failed or skipped:', err.message);
+    });
 
     // Connect to Redis (optional, only if REDIS_URL is set)
     if (process.env.REDIS_URL) {
